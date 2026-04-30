@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사이버 문학관 — 작품 등록</title>
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f7f6f2; --bg3: #f0efe9;
+    --text: #1a1a18; --text2: #5a5a55; --text3: #9a9990;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --info-bg: #e6f1fb; --info: #185fa5;
+    --success-bg: #eaf3de; --success: #3b6d11;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #272724; --bg3: #2e2e2b;
+      --text: #e8e6dc; --text2: #9a9890; --text3: #5a5a55;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --info-bg: #0c447c33; --info: #85b7eb;
+      --success-bg: #27500a33; --success: #97c459;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Noto Sans KR', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .page { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+  .header { padding-bottom: 1.25rem; border-bottom: 0.5px solid var(--border); margin-bottom: 1.75rem; }
+  .header h1 { font-size: 22px; font-weight: 500; letter-spacing: -0.3px; }
+  .header p { font-size: 13px; color: var(--text2); margin-top: 4px; }
+  .nav-link { display: inline-block; margin-top: 10px; font-size: 13px; color: var(--info); text-decoration: none; }
+  .nav-link:hover { text-decoration: underline; }
+  .step-header { font-size: 15px; font-weight: 500; margin: 1.75rem 0 0.9rem; padding-bottom: 8px; border-bottom: 0.5px solid var(--border); display: flex; align-items: center; gap: 8px; }
+  .badge { font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 99px; background: var(--info-bg); color: var(--info); }
+  .badge-gray { font-size: 11px; font-weight: 500; padding: 2px 9px; border-radius: 99px; background: var(--bg2); color: var(--text2); }
+  .form-group { margin-bottom: 1rem; }
+  label.lbl { display: block; font-size: 13px; color: var(--text2); margin-bottom: 5px; }
+  .hint { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  input[type=text], textarea {
+    width: 100%; padding: 9px 12px; border-radius: var(--radius);
+    border: 0.5px solid var(--border2); background: var(--bg);
+    color: var(--text); font-size: 14px; font-family: inherit;
+    outline: none; transition: border-color .15s;
+  }
+  input[type=text]:focus, textarea:focus { border-color: var(--info); }
+  textarea { resize: vertical; line-height: 1.6; }
+  .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 2fr; gap: 12px; }
+
+  /* 학생 정보 박스 */
+  .student-box {
+    background: var(--bg2); border: 0.5px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 18px;
+    margin-bottom: 1.75rem;
+  }
+
+  /* 키워드 */
+  .kw-area { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 7px; align-items: center; }
+  .chip { padding: 4px 12px; border-radius: 99px; border: 0.5px solid var(--border2); font-size: 13px; cursor: pointer; color: var(--text2); background: var(--bg); display: inline-flex; align-items: center; gap: 5px; transition: all .12s; user-select: none; }
+  .chip.on { background: var(--info-bg); color: var(--info); border-color: transparent; }
+  .chip.custom { background: var(--bg2); }
+  .chip.custom.on { background: var(--info-bg); }
+  .chip-x { font-size: 11px; opacity: .55; cursor: pointer; line-height: 1; }
+  .chip-x:hover { opacity: 1; }
+  .kw-input { width: 88px; padding: 4px 10px; border-radius: 99px; border: 0.5px dashed var(--border2); background: var(--bg); color: var(--text); font-size: 13px; font-family: inherit; outline: none; }
+  .kw-add { padding: 4px 11px; border-radius: 99px; border: 0.5px solid var(--border2); background: transparent; font-size: 12px; color: var(--text2); cursor: pointer; white-space: nowrap; }
+  .kw-add:hover { background: var(--bg2); }
+
+  /* 컬러 */
+  .swatch-row { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 7px; }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; transition: all .12s; }
+  .swatch.on { border-color: var(--text); transform: scale(1.18); }
+
+  /* 전시 컨셉 */
+  .vis-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 10px; margin-top: 7px; }
+  .vis-card { padding: 13px 8px; border-radius: var(--radius); border: 0.5px solid var(--border2); text-align: center; cursor: pointer; transition: all .12s; }
+  .vis-card:hover { background: var(--bg2); }
+  .vis-card.on { border-color: var(--info); background: var(--info-bg); }
+  .vis-card.on .vis-lbl { color: var(--info); }
+  .vis-icon { font-size: 18px; margin-bottom: 4px; }
+  .vis-lbl { font-size: 13px; color: var(--text2); }
+
+  /* 이미지 업로드 */
+  .upload-zone { border: 0.5px dashed var(--border2); border-radius: var(--radius); padding: 22px; text-align: center; cursor: pointer; margin-top: 7px; transition: background .12s; }
+  .upload-zone:hover { background: var(--bg2); }
+  .upload-zone p { font-size: 13px; color: var(--text2); margin-top: 5px; }
+  .upload-zone small { font-size: 11px; color: var(--text3); }
+  .img-preview { display: none; margin-top: 10px; }
+  .img-preview img { width: 100%; max-height: 220px; object-fit: cover; border-radius: var(--radius); border: 0.5px solid var(--border); }
+  .img-remove { font-size: 12px; color: #a32d2d; cursor: pointer; margin-top: 5px; display: inline-block; }
+
+  /* 버튼 */
+  .submit-btn { width: 100%; padding: 12px; border-radius: var(--radius); border: none; background: var(--text); color: var(--bg); font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 1rem; transition: opacity .15s; }
+  .submit-btn:hover { opacity: .88; }
+  .submit-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* 알림 */
+  .alert { border-radius: var(--radius); padding: 11px 14px; font-size: 13px; margin-bottom: 1rem; display: none; }
+  .alert.success { background: var(--success-bg); color: var(--success); }
+  .alert.error { background: #fcebeb; color: #a32d2d; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="header">
+    <h1>사이버 문학관</h1>
+    <p>2학년 문학 수행평가 · 작품을 분석하고 전시해보세요</p>
+    <a class="nav-link" href="gallery.html">→ 갤러리 보러가기</a>
+  </div>
+
+  <!-- 학생 정보 -->
+  <div class="student-box">
+    <div class="step-header" style="margin-top:0"><span class="badge-gray">학생 정보</span></div>
+    <div class="row3">
+      <div class="form-group" style="margin-bottom:0">
+        <label class="lbl">반 *</label>
+        <input type="text" id="f-class" placeholder="예) 2">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="lbl">번호 *</label>
+        <input type="text" id="f-number" placeholder="예) 15">
+      </div>
+      <div class="form-group" style="margin-bottom:0">
+        <label class="lbl">이름 *</label>
+        <input type="text" id="f-name" placeholder="예) 홍길동">
+      </div>
+    </div>
+  </div>
+
+  <div id="alert" class="alert"></div>
+
+  <!-- 1단계 -->
+  <div class="step-header"><span class="badge">1단계</span>작품 선정 및 분석</div>
+  <div class="row2">
+    <div class="form-group"><label class="lbl">작품명 *</label><input type="text" id="f-title" placeholder="예) 소나기"></div>
+    <div class="form-group"><label class="lbl">작가 *</label><input type="text" id="f-author" placeholder="예) 황순원"></div>
+  </div>
+  <div class="row2">
+    <div class="form-group"><label class="lbl">화자 / 인물</label><input type="text" id="f-narrator" placeholder="누구인가?"></div>
+    <div class="form-group"><label class="lbl">주제</label><input type="text" id="f-theme" placeholder="한 문장으로"></div>
+  </div>
+  <div class="row2">
+    <div class="form-group"><label class="lbl">태도</label><input type="text" id="f-attitude" placeholder="화자/인물의 태도"></div>
+    <div class="form-group"><label class="lbl">정서</label><input type="text" id="f-emotion" placeholder="작품의 정서"></div>
+  </div>
+  <div class="form-group">
+    <label class="lbl">결정적 장면</label>
+    <textarea id="f-scene" rows="2" placeholder="가장 강렬했던 장면이나 대사를 한 문장으로 포착해보세요"></textarea>
+  </div>
+  <div class="form-group">
+    <label class="lbl">비평 키워드</label>
+    <div class="kw-area" id="kw-area">
+      <span class="chip" onclick="togKw(this)">고독</span><span class="chip" onclick="togKw(this)">허무</span>
+      <span class="chip" onclick="togKw(this)">냉소</span><span class="chip" onclick="togKw(this)">숭고</span>
+      <span class="chip" onclick="togKw(this)">애상</span><span class="chip" onclick="togKw(this)">관조</span>
+      <span class="chip" onclick="togKw(this)">의지</span><span class="chip" onclick="togKw(this)">비판</span>
+      <span class="chip" onclick="togKw(this)">풍자</span><span class="chip" onclick="togKw(this)">연민</span>
+      <span class="chip" onclick="togKw(this)">부조리</span><span class="chip" onclick="togKw(this)">소외</span>
+      <span class="chip" onclick="togKw(this)">모순</span><span class="chip" onclick="togKw(this)">물질화</span>
+      <span class="chip" onclick="togKw(this)">성찰</span><span class="chip" onclick="togKw(this)">아이러니</span>
+      <span class="chip" onclick="togKw(this)">환멸</span>
+      <span style="display:inline-flex;align-items:center;gap:6px;">
+        <input class="kw-input" id="kw-input" type="text" placeholder="직접 입력" maxlength="12" onkeydown="if(event.key==='Enter'){event.preventDefault();addKw()}">
+        <button class="kw-add" onclick="addKw()">+ 추가</button>
+      </span>
+    </div>
+    <div class="hint">제시된 키워드를 선택하거나 직접 입력해 추가하세요</div>
+  </div>
+  <div class="form-group">
+    <label class="lbl">핵심 오브제</label>
+    <input type="text" id="f-object" placeholder="작품을 상징하는 단 하나의 물건">
+  </div>
+  <div class="form-group">
+    <label class="lbl">컬러 팔레트 (2가지 선택)</label>
+    <div class="swatch-row">
+      <div class="swatch" style="background:#4A90D9" data-c="#4A90D9" onclick="togColor(this)" title="파랑"></div>
+      <div class="swatch" style="background:#E8A838" data-c="#E8A838" onclick="togColor(this)" title="황금"></div>
+      <div class="swatch" style="background:#D85A30" data-c="#D85A30" onclick="togColor(this)" title="주황"></div>
+      <div class="swatch" style="background:#7F77DD" data-c="#7F77DD" onclick="togColor(this)" title="보라"></div>
+      <div class="swatch" style="background:#1D9E75" data-c="#1D9E75" onclick="togColor(this)" title="초록"></div>
+      <div class="swatch" style="background:#D4537E" data-c="#D4537E" onclick="togColor(this)" title="분홍"></div>
+      <div class="swatch" style="background:#888780" data-c="#888780" onclick="togColor(this)" title="회색"></div>
+      <div class="swatch" style="background:#3C3489" data-c="#3C3489" onclick="togColor(this)" title="남색"></div>
+      <div class="swatch" style="background:#E24B4A" data-c="#E24B4A" onclick="togColor(this)" title="빨강"></div>
+      <div class="swatch" style="background:#2C2C2A" data-c="#2C2C2A" onclick="togColor(this)" title="검정"></div>
+    </div>
+    <div class="hint">2가지를 선택하세요</div>
+  </div>
+  <div class="form-group">
+    <label class="lbl">전시 컨셉</label>
+    <div class="vis-grid">
+      <div class="vis-card" onclick="selVis(this,'사진')"><div class="vis-icon">📷</div><div class="vis-lbl">사진</div></div>
+      <div class="vis-card" onclick="selVis(this,'콜라주')"><div class="vis-icon">✂️</div><div class="vis-lbl">콜라주</div></div>
+      <div class="vis-card" onclick="selVis(this,'타이포그래피')"><div class="vis-icon">Aa</div><div class="vis-lbl">타이포그래피</div></div>
+    </div>
+  </div>
+
+  <!-- 3단계: 이미지 -->
+  <div class="step-header"><span class="badge">3단계</span>이미지 업로드</div>
+  <div class="form-group">
+    <label class="lbl">전시 이미지</label>
+    <div class="upload-zone" id="upload-zone" onclick="document.getElementById('img-file').click()"
+         ondragover="event.preventDefault();this.style.background='var(--bg2)'"
+         ondragleave="this.style.background=''"
+         ondrop="handleDrop(event)">
+      <div style="font-size:24px">🖼</div>
+      <p>클릭하거나 이미지를 드래그해서 올려주세요</p>
+      <small>사진 · 콜라주 · 타이포그래피 이미지 (JPG, PNG, GIF)</small>
+    </div>
+    <input type="file" id="img-file" accept="image/*" style="display:none" onchange="handleFile(this.files[0])">
+    <div class="img-preview" id="img-preview">
+      <img id="img-thumb" src="" alt="미리보기">
+      <span class="img-remove" onclick="removeImg()">✕ 이미지 제거</span>
+    </div>
+  </div>
+
+  <!-- 2단계: 비평 -->
+  <div class="step-header"><span class="badge">2단계</span>작품 비평하기</div>
+  <div class="form-group"><label class="lbl">분석</label><textarea id="f-analysis" rows="2" placeholder="작품의 구조·표현·내용 분석"></textarea></div>
+  <div class="form-group"><label class="lbl">평가</label><textarea id="f-eval" rows="2" placeholder="작품에 대한 나의 평가"></textarea></div>
+  <div class="form-group"><label class="lbl">근거</label><textarea id="f-ground" rows="2" placeholder="평가를 뒷받침하는 근거"></textarea></div>
+  <div class="form-group">
+    <label class="lbl">두 줄 비평</label>
+    <textarea id="f-critique" rows="2" placeholder="A(현상)를 통해 B(본질)를 드러낸다"></textarea>
+    <div class="hint">예) 소년의 침묵을 통해 표현하지 못한 사랑의 아름다움을 드러낸다</div>
+  </div>
+
+  <!-- 4단계: 도슨트 -->
+  <div class="step-header"><span class="badge">4단계</span>도슨트 한마디</div>
+  <div class="form-group">
+    <textarea id="f-docent" rows="2" placeholder="이 작품을 읽고 싶게 만드는 한마디"></textarea>
+  </div>
+
+  <button class="submit-btn" id="submit-btn" onclick="submit()">갤러리에 등록하기</button>
+</div>
+
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwb6ivS_zeOpm3Fns66Ke91pGAdwTWPbWaP3HeOyjKOSrapU29CpVitjVPjCH29fQPa/exec';
+var selKws = [], selColors = [], selVisVal = '', imgData = '';
+
+function togKw(el) {
+  el.classList.toggle('on');
+  var k = el.childNodes[0].textContent.trim();
+  var i = selKws.indexOf(k);
+  if (i > -1) selKws.splice(i, 1); else selKws.push(k);
+}
+function addKw() {
+  var inp = document.getElementById('kw-input');
+  var v = inp.value.trim();
+  if (!v || selKws.includes(v)) { inp.value = ''; return; }
+  var area = document.getElementById('kw-area');
+  var row = area.querySelector('span:last-child');
+  var chip = document.createElement('span');
+  chip.className = 'chip custom on';
+  chip.innerHTML = v + '<span class="chip-x" onclick="removeKw(this)">✕</span>';
+  selKws.push(v);
+  area.insertBefore(chip, row);
+  inp.value = '';
+}
+function removeKw(x) {
+  var chip = x.parentElement;
+  var k = chip.childNodes[0].textContent.trim();
+  selKws = selKws.filter(s => s !== k);
+  chip.remove();
+}
+function togColor(el) {
+  var c = el.dataset.c;
+  if (el.classList.contains('on')) { el.classList.remove('on'); selColors = selColors.filter(x => x !== c); }
+  else {
+    if (selColors.length >= 2) { document.querySelector('.swatch.on').classList.remove('on'); selColors.shift(); }
+    el.classList.add('on'); selColors.push(c);
+  }
+}
+function selVis(el, v) {
+  document.querySelectorAll('.vis-card').forEach(c => c.classList.remove('on'));
+  el.classList.add('on'); selVisVal = v;
+}
+function handleFile(file) {
+  if (!file) return;
+  var r = new FileReader();
+  r.onload = function(e) {
+    imgData = e.target.result;
+    document.getElementById('img-thumb').src = imgData;
+    document.getElementById('img-preview').style.display = 'block';
+    document.getElementById('upload-zone').style.display = 'none';
+  };
+  r.readAsDataURL(file);
+}
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('upload-zone').style.background = '';
+  var file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('image/')) handleFile(file);
+}
+function removeImg() {
+  imgData = '';
+  document.getElementById('img-thumb').src = '';
+  document.getElementById('img-preview').style.display = 'none';
+  document.getElementById('upload-zone').style.display = 'block';
+  document.getElementById('img-file').value = '';
+}
+function showAlert(msg, type) {
+  var el = document.getElementById('alert');
+  el.textContent = msg; el.className = 'alert ' + type; el.style.display = 'block';
+  if (type === 'success') setTimeout(() => el.style.display = 'none', 3500);
+}
+async function submit() {
+  var cls = document.getElementById('f-class').value.trim();
+  var num = document.getElementById('f-number').value.trim();
+  var name = document.getElementById('f-name').value.trim();
+  var title = document.getElementById('f-title').value.trim();
+  var author = document.getElementById('f-author').value.trim();
+  if (!cls || !num || !name) { showAlert('반, 번호, 이름을 모두 입력해주세요.', 'error'); return; }
+  if (!title || !author) { showAlert('작품명과 작가는 필수입니다.', 'error'); return; }
+
+  var btn = document.getElementById('submit-btn');
+  btn.disabled = true; btn.textContent = '등록 중...';
+
+  var payload = {
+    class: cls, number: num, name,
+    title, author,
+    narrator: document.getElementById('f-narrator').value.trim(),
+    theme: document.getElementById('f-theme').value.trim(),
+    attitude: document.getElementById('f-attitude').value.trim(),
+    emotion: document.getElementById('f-emotion').value.trim(),
+    scene: document.getElementById('f-scene').value.trim(),
+    keywords: selKws,
+    object: document.getElementById('f-object').value.trim(),
+    colors: selColors,
+    visual: selVisVal,
+    analysis: document.getElementById('f-analysis').value.trim(),
+    eval: document.getElementById('f-eval').value.trim(),
+    ground: document.getElementById('f-ground').value.trim(),
+    critique: document.getElementById('f-critique').value.trim(),
+    docent: document.getElementById('f-docent').value.trim(),
+    img: imgData
+  };
+
+  try {
+    await fetch(SCRIPT_URL, { method: 'POST', body: JSON.stringify(payload), mode: 'no-cors' });
+    showAlert('갤러리에 등록되었습니다! 갤러리에서 확인해보세요.', 'success');
+    resetForm();
+  } catch (err) {
+    showAlert('등록 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.', 'error');
+  }
+  btn.disabled = false; btn.textContent = '갤러리에 등록하기';
+}
+function resetForm() {
+  ['f-class','f-number','f-name','f-title','f-author','f-narrator','f-theme','f-attitude','f-emotion','f-scene','f-object','f-analysis','f-eval','f-ground','f-critique','f-docent'].forEach(id => document.getElementById(id).value = '');
+  document.querySelectorAll('.chip:not(.custom)').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('.chip.custom').forEach(c => c.remove());
+  document.querySelectorAll('.swatch').forEach(c => c.classList.remove('on'));
+  document.querySelectorAll('.vis-card').forEach(c => c.classList.remove('on'));
+  selKws = []; selColors = []; selVisVal = '';
+  removeImg();
+}
+</script>
+</body>
+</html>

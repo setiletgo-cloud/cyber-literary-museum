@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>사이버 문학관 — 갤러리</title>
+<style>
+  :root {
+    --bg: #ffffff; --bg2: #f7f6f2; --bg3: #f0efe9;
+    --text: #1a1a18; --text2: #5a5a55; --text3: #9a9990;
+    --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+    --info-bg: #e6f1fb; --info: #185fa5;
+    --radius: 8px; --radius-lg: 12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1e1e1c; --bg2: #272724; --bg3: #2e2e2b;
+      --text: #e8e6dc; --text2: #9a9890; --text3: #5a5a55;
+      --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+      --info-bg: #0c447c33; --info: #85b7eb;
+    }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Noto Sans KR', sans-serif; background: var(--bg3); color: var(--text); min-height: 100vh; }
+  .page-header { background: var(--bg); border-bottom: 0.5px solid var(--border); padding: 0 1.5rem; }
+  .header-inner { max-width: 1200px; margin: 0 auto; padding: 1.25rem 0; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .header-inner h1 { font-size: 20px; font-weight: 500; letter-spacing: -0.3px; }
+  .header-inner p { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .header-actions { display: flex; align-items: center; gap: 10px; }
+  .btn-outline { padding: 7px 14px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; font-size: 13px; color: var(--text2); cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn-outline:hover { background: var(--bg2); }
+  .reload-btn { padding: 7px 14px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: transparent; font-size: 13px; color: var(--text2); cursor: pointer; }
+  .reload-btn:hover { background: var(--bg2); }
+  .count-badge { font-size: 12px; color: var(--text3); }
+  .gallery-wrap { max-width: 1200px; margin: 0 auto; padding: 1.75rem 1.25rem 4rem; }
+  .gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+  .g-card { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); overflow: hidden; cursor: pointer; transition: border-color .15s, transform .12s; }
+  .g-card:hover { border-color: var(--border2); transform: translateY(-2px); }
+  .g-thumb { height: 120px; overflow: hidden; }
+  .g-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .g-thumb-color { width: 100%; height: 100%; }
+  .g-body { padding: 14px 16px; }
+  .g-title { font-size: 15px; font-weight: 500; }
+  .g-author { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .g-student { font-size: 11px; color: var(--text3); margin-top: 3px; }
+  .g-kws { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 8px; }
+  .g-kw { font-size: 11px; padding: 2px 9px; border-radius: 99px; background: var(--bg2); color: var(--text2); }
+  .g-critique { font-size: 12px; color: var(--text2); margin-top: 8px; line-height: 1.55; border-top: 0.5px solid var(--border); padding-top: 8px; }
+  .empty-state { text-align: center; padding: 5rem 2rem; color: var(--text3); }
+  .empty-state p { font-size: 14px; margin-bottom: 6px; }
+  .loading { text-align: center; padding: 5rem 2rem; color: var(--text3); font-size: 14px; }
+  .spinner { width: 24px; height: 24px; border: 2px solid var(--border2); border-top-color: var(--info); border-radius: 50%; animation: spin .7s linear infinite; margin: 0 auto 12px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* 모달 */
+  .overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 100; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .overlay.open { display: flex; }
+  .modal { background: var(--bg); border-radius: var(--radius-lg); border: 0.5px solid var(--border); width: 100%; max-width: 600px; overflow: hidden; margin: auto; }
+  .modal-img { width: 100%; max-height: 260px; object-fit: cover; display: block; }
+  .modal-color-bar { height: 90px; }
+  .modal-body { padding: 20px 22px 24px; }
+  .modal-top { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .modal-work-title { font-size: 20px; font-weight: 500; }
+  .modal-author { font-size: 13px; color: var(--text2); margin-top: 3px; }
+  .modal-student { font-size: 12px; color: var(--text3); margin-top: 2px; }
+  .modal-close { padding: 6px 14px; border-radius: var(--radius); border: 0.5px solid var(--border2); background: var(--bg2); font-size: 13px; cursor: pointer; color: var(--text2); white-space: nowrap; flex-shrink: 0; }
+  .modal-close:hover { background: var(--bg3); }
+  .badge-vis { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--bg2); color: var(--text2); margin-left: 7px; vertical-align: middle; }
+  .modal-kws { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .modal-kw { font-size: 12px; padding: 3px 10px; border-radius: 99px; background: var(--info-bg); color: var(--info); }
+  .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 16px; }
+  .modal-field-label { font-size: 11px; font-weight: 500; color: var(--text3); letter-spacing: .4px; text-transform: uppercase; margin-bottom: 4px; }
+  .modal-field-val { font-size: 14px; color: var(--text); line-height: 1.6; }
+  .modal-full { margin-top: 14px; }
+  .critique-box { margin-top: 16px; padding: 14px 16px; background: var(--bg2); border-radius: var(--radius); border-left: 3px solid var(--border2); border-top-left-radius: 0; border-bottom-left-radius: 0; }
+  .critique-txt { font-size: 14px; line-height: 1.65; font-style: italic; }
+  .docent-line { margin-top: 14px; font-size: 13px; color: var(--text2); font-style: italic; border-top: 0.5px solid var(--border); padding-top: 12px; }
+  .obj-pill { display: inline-block; font-size: 12px; padding: 3px 10px; border-radius: 99px; border: 0.5px solid var(--border2); color: var(--text2); margin-top: 4px; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-inner">
+    <div>
+      <h1>사이버 문학관</h1>
+      <p>2학년 문학 수행평가 갤러리</p>
+    </div>
+    <div class="header-actions">
+      <span class="count-badge" id="count-badge"></span>
+      <button class="reload-btn" onclick="loadWorks()">새로고침</button>
+      <a class="btn-outline" href="index.html">작품 등록하기</a>
+    </div>
+  </div>
+</header>
+
+<div class="gallery-wrap">
+  <div id="gallery-content">
+    <div class="loading"><div class="spinner"></div>데이터 불러오는 중...</div>
+  </div>
+</div>
+
+<!-- 모달 -->
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal">
+    <div id="modal-img-wrap"></div>
+    <div class="modal-body">
+      <div class="modal-top">
+        <div>
+          <div class="modal-work-title" id="m-title"></div>
+          <div class="modal-author" id="m-author"></div>
+          <div class="modal-student" id="m-student"></div>
+        </div>
+        <button class="modal-close" onclick="document.getElementById('overlay').classList.remove('open');document.body.style.overflow=''">닫기</button>
+      </div>
+      <div class="modal-kws" id="m-kws"></div>
+      <div class="modal-grid">
+        <div><div class="modal-field-label">화자 / 인물</div><div class="modal-field-val" id="m-narrator"></div></div>
+        <div><div class="modal-field-label">주제</div><div class="modal-field-val" id="m-theme"></div></div>
+        <div><div class="modal-field-label">태도</div><div class="modal-field-val" id="m-attitude"></div></div>
+        <div><div class="modal-field-label">정서</div><div class="modal-field-val" id="m-emotion"></div></div>
+      </div>
+      <div class="modal-full">
+        <div class="modal-field-label">결정적 장면</div>
+        <div class="modal-field-val" id="m-scene"></div>
+      </div>
+      <div class="modal-full">
+        <div class="modal-field-label">핵심 오브제</div>
+        <span class="obj-pill" id="m-object"></span>
+      </div>
+      <div class="modal-full">
+        <div class="modal-field-label">분석 · 평가 · 근거</div>
+        <div class="modal-field-val" id="m-analysis"></div>
+      </div>
+      <div class="critique-box">
+        <div class="modal-field-label">두 줄 비평</div>
+        <div class="critique-txt" id="m-critique"></div>
+      </div>
+      <div class="docent-line" id="m-docent"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+var SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwb6ivS_zeOpm3Fns66Ke91pGAdwTWPbWaP3HeOyjKOSrapU29CpVitjVPjCH29fQPa/exec';
+var works = [];
+
+async function loadWorks() {
+  document.getElementById('gallery-content').innerHTML = '<div class="loading"><div class="spinner"></div>데이터 불러오는 중...</div>';
+  try {
+    var res = await fetch(SCRIPT_URL);
+    var json = await res.json();
+    works = json.data || [];
+    renderGallery();
+  } catch(e) {
+    document.getElementById('gallery-content').innerHTML = '<div class="empty-state"><p>데이터를 불러오지 못했습니다.</p><p>잠시 후 새로고침 해보세요.</p></div>';
+  }
+}
+
+function renderGallery() {
+  document.getElementById('count-badge').textContent = works.length ? '총 ' + works.length + '점' : '';
+  var el = document.getElementById('gallery-content');
+  if (!works.length) {
+    el.innerHTML = '<div class="empty-state"><p>아직 등록된 작품이 없습니다.</p><p>첫 번째로 작품을 등록해보세요!</p></div>';
+    return;
+  }
+  var html = '<div class="gallery-grid">';
+  works.forEach(function(w) {
+    var thumb = w.img
+      ? '<div class="g-thumb"><img src="' + w.img + '" alt="' + esc(w.title) + '" loading="lazy"></div>'
+      : '<div class="g-thumb"><div class="g-thumb-color" style="' + thumbBg(w) + '"></div></div>';
+    var kws = (w.keywords || []).slice(0,3).map(function(k){ return '<span class="g-kw">' + esc(k) + '</span>'; }).join('');
+    var student = (w.class && w.number && w.name) ? esc(w.class) + '반 ' + esc(w.number) + '번 · ' + esc(w.name) : (w.name || '');
+    var critique = w.critique ? '<div class="g-critique">' + esc(w.critique) + '</div>' : '';
+    html += '<div class="g-card" onclick="openModal(' + w.id + ')">'
+      + thumb
+      + '<div class="g-body">'
+      + '<div class="g-title">' + esc(w.title) + '</div>'
+      + '<div class="g-author">' + esc(w.author) + '</div>'
+      + (student ? '<div class="g-student">' + student + '</div>' : '')
+      + '<div class="g-kws">' + kws + '</div>'
+      + critique
+      + '</div></div>';
+  });
+  html += '</div>';
+  el.innerHTML = html;
+}
+
+function thumbBg(w) {
+  if (!w.colors || !w.colors.length) return 'background:#e8e6dc';
+  if (w.colors.length >= 2) return 'background:linear-gradient(135deg,' + w.colors[0] + ' 50%,' + w.colors[1] + ' 50%)';
+  return 'background:' + w.colors[0];
+}
+
+function openModal(id) {
+  var w = works.find(function(x){ return x.id === id; });
+  if (!w) return;
+  var wrap = document.getElementById('modal-img-wrap');
+  if (w.img) wrap.innerHTML = '<img class="modal-img" src="' + w.img + '" alt="' + esc(w.title) + '">';
+  else wrap.innerHTML = '<div class="modal-color-bar" style="' + thumbBg(w) + '"></div>';
+  document.getElementById('m-title').textContent = w.title;
+  document.getElementById('m-author').innerHTML = esc(w.author) + (w.visual ? '<span class="badge-vis">' + esc(w.visual) + '</span>' : '');
+  var student = (w.class && w.number && w.name) ? w.class + '반 ' + w.number + '번 · ' + w.name : (w.name || '');
+  document.getElementById('m-student').textContent = student;
+  document.getElementById('m-kws').innerHTML = (w.keywords || []).map(function(k){ return '<span class="modal-kw">' + esc(k) + '</span>'; }).join('');
+  document.getElementById('m-narrator').textContent = w.narrator || '—';
+  document.getElementById('m-theme').textContent = w.theme || '—';
+  document.getElementById('m-attitude').textContent = w.attitude || '—';
+  document.getElementById('m-emotion').textContent = w.emotion || '—';
+  document.getElementById('m-scene').textContent = w.scene || '—';
+  document.getElementById('m-object').textContent = w.object || '—';
+  document.getElementById('m-analysis').textContent = [w.analysis, w.eval, w.ground].filter(Boolean).join(' / ') || '—';
+  document.getElementById('m-critique').textContent = w.critique || '—';
+  document.getElementById('m-docent').textContent = w.docent ? '"' + w.docent + '"' : '';
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('overlay')) {
+    document.getElementById('overlay').classList.remove('open');
+    document.body.style.overflow = '';
+  }
+}
+
+function esc(s) {
+  if (!s) return '';
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadWorks();
+</script>
+</body>
+</html>
